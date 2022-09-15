@@ -3,22 +3,19 @@ Transform: AWS::Serverless-2016-10-31
 Description: Cognito stack
 
 Parameters:
-  CognitoDomain:
+  DomainName:
     Type: String
-    MinLength: 3
-    MaxLength: 63
-    #AllowedPattern: ^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$
-    Description: Enter a string. Must be alpha numeric 3-63 in length.
+    Default: my-user
 
 Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
+      UserPoolName: !Ref AWS::StackName
       UsernameConfiguration: 
         CaseSensitive: false
-      AutoVerifiedAttributes:
-        - email
-      UserPoolName: !Sub ${CognitoDomain}-user-pool
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
       Schema:
         - Name: email
           AttributeDataType: String
@@ -32,28 +29,26 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: rest-api
+      ClientName: rest-api-client
+      GenerateSecret: false
       UserPoolId: !Ref UserPool
-      AllowedOAuthFlowsUserPoolClient: true
-      CallbackURLs:
-        - http://localhost:3000
-      AllowedOAuthFlows:
-        - code
-        - implicit
-      AllowedOAuthScopes:
-        - phone
-        - email
-        - openid
-        - profile
-      SupportedIdentityProviders:
-        - COGNITO
-
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 1
+      TokenValidityUnits:
+        AccessToken: hours
+        RefreshToken: hours
+      
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Ref CognitoDomain
       UserPoolId: !Ref UserPool
-      
+      Domain: !Ref DomainName
+
 Outputs:
   CognitoUserPoolARN:
     Value: !GetAtt UserPool.Arn

@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  My REST API
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+
+Globals:
+  Function:
+    Timeout: 5
+
+Resources:
+
+  MyHttpAPIGatewatLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: MyHttpAPI
+      RetentionInDays: 1
+
+  MyHttpAPIGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      Auth:
+        Authorizers:
+          OAuth2Authorizer:
+            JwtConfiguration:
+              issuer:
+                - Fn::ImportValue: !Sub MyPoolProviderURL
+              audience:
+                - Fn::ImportValue: !Sub MyAppClient
+            IdentitySource: "$request.header.Authorization"
+        DefaultAuthorizer: OAuth2Authorizer
+
+  LambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Path: /service-role/
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        -
+          PolicyName: "CloudFormationAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - "iam:PassRole"
+                  - "iam:GetRole"
+                  - "iam:CreateRole"
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+              -
+                Effect: "Allow"
+                Action:
+                  - "cognito-idp:AdminGetUser"
+                  - "cognito-idp:AdminCreateUser"
+                  - "cognito-idp:AdminDeleteUser"
+                  - "cognito-idp:AdminUpdateUserAttributes"
+                  - "cognito-idp:ListUsers"
+                  - "cognito-idp:AdminDisableUser"
+                  - "cognito-idp:AdminEnableUser"
+                Resource:
+                  - Fn::ImportValue: !Sub MyCognitoUserPoolARN
+
+  AuthHandler:
+    DependsOn: LambdaFunctionRole
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: build/restapi/auth
+      Handler: auth
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Events:
+        Authorize:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpAPIGateway
+            Path: /auth
+            Method: post
+            Auth:
+              Authorizer: NONE
+
+  HelloHandler:
+    DependsOn: LambdaFunctionRole
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: build/restapi/hello
+      Handler: hello
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Events:
+        Authorize:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpAPIGateway
+            Path: /hello
+            Method: get
+            # Auth:
+            #   Authorizer: NONE
+
+Outputs:
+  HttpAPIGatewayURL:
+    Description: "API Gateway endpoint URL for Prod environment for First Function"
+    Export:
+      Name: MyHttpAPIGatewayURL
+    Value: !Sub "https://${MyHttpAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/"
