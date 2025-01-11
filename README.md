@@ -1,11 +1,11 @@
 # Overview
 
-Welcome my project discussing topics related to Amazon Web Services (AWS).
+Welcome my project discussing architectural patterns and programming techniques using Amazon Web Services (AWS). This project also includes working examples demonstrating the application of patterns and programming techniques.
 
 ## Topics
 
+* [Local stack](./docs/localstack.md)
 * [CloudFormation](./docs/cf.md)
-* [Virtual Private Cloud](./docs/vpc.md)
 
 
 ## Copyright
