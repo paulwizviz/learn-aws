@@ -4,6 +4,8 @@ Welcome my project discussing architectural patterns and programming techniques 
 
 ## Topics
 
+* Architecture Patterns
+    * [Authentication and Authorization](./docs/auth.md)
 * [Local stack](./docs/localstack.md)
 * [CloudFormation](./docs/cf.md)
 
