@@ -2,6 +2,9 @@
 
 .vscode/
 
+.$*.bkp
+
 tmp/
 
+localstack/volume
 build/
