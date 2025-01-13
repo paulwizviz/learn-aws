@@ -6,6 +6,7 @@ Welcome my project discussing architectural patterns and programming techniques 
 
 * Architecture Patterns
     * [Authentication and Authorization](./docs/auth.md)
+    * [SQS and SNS](./docs/sqs.md)
 * [Local stack](./docs/localstack.md)
 * [CloudFormation](./docs/cf.md)
 
