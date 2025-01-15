@@ -1,0 +1,30 @@
+
+services:
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566-4599:4566-4599" # LocalStack services
+      - "8080:8080"           # LocalStack Web UI (optional)
+    environment:
+      - SERVICES=iam,s3,lambda,apigateway,dynamodb,sqs # Include 'iam' here
+      - DEBUG=1                  # Optional: Enable debug logging
+      - AWS_DEFAULT_REGION=us-east-1 # Set your desired region
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./.localstack}:/var/lib/localstack" # Optional: Persist data
+    networks:
+      - local
+
+  shell:
+    image: amazon/aws-cli:2.22.34
+    container_name: awscli
+    stdin_open: true # Keeps stdin open for interactive mode
+    tty: true # Allocates a TTY for the shell
+    command: /bin/sh
+    networks:
+      - local
+
+networks:
+  local:
+    name: ${NETWORK_NAME}
+    driver: bridge

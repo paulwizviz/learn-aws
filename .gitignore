@@ -7,4 +7,4 @@
 tmp/
 
 localstack/volume
-build/
+iam/.localstack

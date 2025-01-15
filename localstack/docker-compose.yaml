@@ -1,4 +1,5 @@
 services:
+
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
     image: localstack/localstack
@@ -7,6 +8,8 @@ services:
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - SERVICES=s3,lambda,sqs,dynamodb,apigateway,ec2 # Add the services you need
+      - AWS_DEFAULT_REGION=us-east-1
       - DEBUG=${DEBUG:-0}
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
